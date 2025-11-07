@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ausgeh-Erfahrungen</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 1rem;">
+  <h1>Teile deine Ausgeh-Erfahrung als Queere Person in Zürich</h1>
+
+  <form id="postForm">
+    <input type="text" id="nickname" placeholder="Pseudonym (optional)" style="width:100%;margin-bottom:10px">
+    <textarea id="content" placeholder="Erzähle deine Geschichte..." required rows="5" style="width:100%;margin-bottom:10px"></textarea>
+    <button type="submit">Absenden</button>
+  </form>
+
+  <hr>
+
+  <h2>Erfahrungen anderer</h2>
+  <div id="posts"></div>
+
+  <script>
+    // 🔑 Diese Werte bekommst du aus Supabase -> Project Settings -> API
+    const SUPABASE_URL = "https://hqdrifvdyqnegzhuuokr.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZHJpZnZkeXFuZWd6aHV1b2tyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NjMzOTQsImV4cCI6MjA3ODAzOTM5NH0.FdODIg9VPZdQ_E5twvVIb0pxSYVJTP2byifTHyCJKzM";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function loadPosts() {
+      const { data } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const container = document.getElementById('posts');
+      container.innerHTML = data.map(p => `
+        <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px; border-radius:8px">
+          <p>${p.content}</p>
+          <small>– ${p.nickname || 'Anonym'}</small>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('postForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nickname = document.getElementById('nickname').value;
+      const content = document.getElementById('content').value;
+
+      await supabase.from('posts').insert([{ nickname, content }]);
+      document.getElementById('content').value = '';
+      await loadPosts();
+    });
+
+    loadPosts();
+  </script>
+</body>
+</html>
+
